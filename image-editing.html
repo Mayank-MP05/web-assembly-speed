@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Editing - JavaScript</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-lg p-4 bg-white rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-center mb-4">Image Editing using JS Only</h2>
+
+        <div class="mb-4">
+            <input type="file" id="upload" accept="image/*"
+                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2 ">
+        </div>
+
+        <canvas id="canvas" class="border border-gray-300 rounded w-full mb-4">
+        </canvas>
+
+        <button id="grayscale" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            Convert to Grayscale
+        </button>
+
+        <!-- Time display -->
+        <div id="timeDisplay" class="mt-4 text-center text-gray-700 font-medium">
+            <p>Conversion Time: <span id="timeResult">Not calculated yet</span></p>
+        </div>
+    </div>
+
+    <script>
+        const upload = document.getElementById('upload');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const timeResult = document.getElementById('timeResult'); // For displaying time
+
+        upload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function () {
+                const img = new Image();
+                img.onload = function () {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('grayscale').addEventListener('click', () => {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            console.time("Grayscale Conversion Time"); // Start timing
+            const startTime = performance.now(); // Start timing
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const avg = (r + g + b) / 3;
+
+                data[i] = avg;     // Red
+                data[i + 1] = avg; // Green
+                data[i + 2] = avg; // Blue
+            }
+            console.timeEnd("Grayscale Conversion Time"); // End timing
+
+            // Display the time on UI
+            console.timeLog("Grayscale Conversion Time");
+            const endTime = performance.now(); // End timing
+            const timeTaken = (endTime - startTime); // Convert to seconds
+
+            timeResult.textContent = `${timeTaken}ms`; // Display the time in milliseconds
+
+            ctx.putImageData(imageData, 0, 0);
+        });
+    </script>
+</body>
+
+</html>
