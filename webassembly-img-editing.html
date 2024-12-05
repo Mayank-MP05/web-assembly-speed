@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Editing - WebAssembly</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-lg p-4 bg-white rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-center mb-4">Image Editing using WebAssembly</h2>
+
+        <div class="mb-4">
+            <input type="file" id="upload" accept="image/*"
+                class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2 ">
+        </div>
+
+        <canvas id="canvas" class="border border-gray-300 rounded w-full mb-4"></canvas>
+
+        <button id="grayscale" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            Convert to Grayscale
+        </button>
+
+        <!-- Time display -->
+        <div id="timeDisplay" class="mt-4 text-center text-gray-700 font-medium">
+            <p>Conversion Time: <span id="timeResult">Not calculated yet</span></p>
+        </div>
+    </div>
+
+    <script>
+        const upload = document.getElementById('upload');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const timeResult = document.getElementById('timeResult'); // For displaying time
+
+        // WebAssembly module initialization
+        let wasmModule;
+        WebAssembly.instantiateStreaming(fetch('grayscale.wasm')).then(module => {
+            wasmModule = module.instance;
+        });
+
+        upload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function () {
+                const img = new Image();
+                img.onload = function () {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('grayscale').addEventListener('click', () => {
+            console.log("[INFO] convert to grayscale btn clicked");
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            const startTime = performance.now(); // Start timing
+            // Call the grayscale function in WASM
+            console.log("[INFO] starting wasm fn");
+
+            wasmModule.exports.grayscale(data, canvas.width, canvas.height);
+            const endTime = performance.now(); // End timing
+            console.log("[INFO] finished wasm fn");
+
+
+            // Display the time on UI
+            const timeTaken = (endTime - startTime).toFixed(2);
+            timeResult.textContent = `${timeTaken} ms`; // Display the time in milliseconds
+
+            ctx.putImageData(imageData, 0, 0);
+        });
+    </script>
+</body>
+
+</html>
