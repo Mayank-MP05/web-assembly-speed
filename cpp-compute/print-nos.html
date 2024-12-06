@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C++ in WebAssembly</title>
+</head>
+
+<body>
+  <h1>Running C++ in WebAssembly</h1>
+  <script src="./print-nos.js"></script>
+  <script>
+    // Wait for the WebAssembly module to be fully loaded
+    Module.onRuntimeInitialized = function () {
+      console.log("WebAssembly module initialized successfully", Module);
+      // Call main() function from the C++ code
+      Module._printNos();
+    };
+  </script>
+</body>
+
+</html>
